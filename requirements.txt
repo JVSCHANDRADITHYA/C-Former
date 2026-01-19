@@ -1,6 +1,14 @@
 opencv-python==4.5.5.62
-tqdm
-pytorch-msssim
-timm
-tensorboard
-tensorboardx
+tqdm==4.67.1
+pytorch-msssim==1.0.0
+
+# CRITICAL PIN
+timm==0.6.13
+
+# TensorBoard stack compatible with torch 1.10 + py37
+tensorboard==2.9.1
+tensorboardx==2.5.1
+
+# Explicit pins to avoid transitive breakage
+pyyaml==6.0
+huggingface-hub==0.12.1

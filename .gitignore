@@ -121,3 +121,9 @@ venv.bak/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.pth

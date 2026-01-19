@@ -13,10 +13,10 @@ from models import *
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--model', default='dehazeformer-s', type=str, help='model name')
+parser.add_argument('--model', default='dehazeformer-d', type=str, help='model name')
 parser.add_argument('--num_workers', default=16, type=int, help='number of workers')
 parser.add_argument('--data_dir', default='./data/', type=str, help='path to dataset')
-parser.add_argument('--save_dir', default='./saved_models/', type=str, help='path to models saving')
+parser.add_argument('--save_dir', default='./save_models/', type=str, help='path to models saving')
 parser.add_argument('--result_dir', default='./results/', type=str, help='path to results saving')
 parser.add_argument('--dataset', default='RESIDE-IN', type=str, help='dataset name')
 parser.add_argument('--exp', default='indoor', type=str, help='experiment setting')
@@ -82,7 +82,7 @@ def test(test_loader, network, result_dir):
 	f_result.close()
 
 	os.rename(os.path.join(result_dir, 'results.csv'), 
-			  os.path.join(result_dir, '%.02f | %.04f.csv'%(PSNR.avg, SSIM.avg)))
+			  os.path.join(result_dir, f'{PSNR.avg:.02f}_{SSIM.avg:.03f}.csv'))
 
 
 if __name__ == '__main__':
