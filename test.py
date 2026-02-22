@@ -13,11 +13,11 @@ from models import *
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--model', default='dehazeformer-d', type=str, help='model name')
-parser.add_argument('--num_workers', default=16, type=int, help='number of workers')
+parser.add_argument('--model', default='dehazeformer-t', type=str, help='model name')
+parser.add_argument('--num_workers', default=1, type=int, help='number of workers')
 parser.add_argument('--data_dir', default='./data/', type=str, help='path to dataset')
-parser.add_argument('--save_dir', default='./save_models/', type=str, help='path to models saving')
-parser.add_argument('--result_dir', default='./results/', type=str, help='path to results saving')
+parser.add_argument('--save_dir', default='./custom_saves/', type=str, help='path to models saving')
+parser.add_argument('--result_dir', default='./results_custom_1/', type=str, help='path to results saving')
 parser.add_argument('--dataset', default='RESIDE-IN', type=str, help='dataset name')
 parser.add_argument('--exp', default='indoor', type=str, help='experiment setting')
 args = parser.parse_args()
@@ -94,7 +94,7 @@ if __name__ == '__main__':
 		print('==> Start testing, current model name: ' + args.model)
 		network.load_state_dict(single(saved_model_dir))
 	else:
-		print('==> No existing trained model!')
+		print('==> No existing trained model! in '+ saved_model_dir)
 		exit(0)
 
 	dataset_dir = os.path.join(args.data_dir, args.dataset)
