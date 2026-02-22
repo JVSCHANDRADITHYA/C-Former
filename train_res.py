@@ -24,8 +24,8 @@ from models import *
 # ============================
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', default='dehazeformer-t', type=str)
-parser.add_argument('--num_workers', default=4, type=int)          # Windows-safe
-parser.add_argument('--batch_size', default=4, type=int)           # USE YOUR VRAM
+parser.add_argument('--num_workers', default=4, type=int)
+parser.add_argument('--batch_size', default=4, type=int)
 parser.add_argument('--epochs', default=30, type=int)
 parser.add_argument('--save_dir', default='./saved_models/', type=str)
 parser.add_argument('--data_dir', default='./data/', type=str)
@@ -40,7 +40,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 torch.backends.cudnn.benchmark = True
 
 # ============================
-# LOSS
+# LOSS (UNCHANGED)
 # ============================
 def criterion(pred, target):
     l1 = F.l1_loss(pred, target)
@@ -53,21 +53,20 @@ def criterion(pred, target):
     return l1 + 0.2 * ssim_loss
 
 # ============================
-# TRAIN (ITERATION TQDM)
+# TRAIN (FIXED PROGRESS BAR)
 # ============================
-def train_epoch(loader, model, optimizer, scaler, epoch):
+def train_epoch(loader, model, optimizer, scaler, epoch, best_psnr):
     model.train()
     running_loss = 0.0
 
     pbar = tqdm(
-        loader,
+        enumerate(loader, 1),
         total=len(loader),
-        desc=f"Epoch {epoch}",
         ncols=120,
-        leave=False
+        desc=f"Epoch {epoch}"
     )
 
-    for i, batch in enumerate(pbar):
+    for i, batch in pbar:
         src = batch['source'].cuda(non_blocking=True)
         tgt = batch['target'].cuda(non_blocking=True)
 
@@ -81,13 +80,14 @@ def train_epoch(loader, model, optimizer, scaler, epoch):
         scaler.update()
 
         running_loss += loss.item()
-        avg_loss = running_loss / (i + 1)
+        avg_loss = running_loss / i
 
-        pbar.set_postfix(
-            iter=i,
-            loss=f"{loss.item():.4f}",
-            avg=f"{avg_loss:.4f}"
-        )
+        pbar.set_postfix({
+            "iter": f"{i}/{len(loader)}",
+            "loss": f"{loss.item():.4f}",
+            "avg": f"{avg_loss:.4f}",
+            "best_psnr": f"{best_psnr:.2f}"
+        })
 
     return avg_loss
 
@@ -201,14 +201,20 @@ if __name__ == '__main__':
     writer = SummaryWriter(os.path.join(args.log_dir, args.exp, args.model))
     best_psnr = 0.0
 
-    # ---- Training loop (CLEAN CTRL+C)
+    # ---- Training Loop
     try:
-        epoch_pbar = tqdm(range(args.epochs), desc="Training", ncols=120)
+        for epoch in range(1, args.epochs + 1):
 
-        for epoch in epoch_pbar:
-            loss = train_epoch(train_loader, model, optimizer, scaler, epoch)
+            loss = train_epoch(
+                train_loader,
+                model,
+                optimizer,
+                scaler,
+                epoch,
+                best_psnr
+            )
+
             writer.add_scalar("train/loss", loss, epoch)
-
             scheduler.step()
 
             if epoch % setting['eval_freq'] == 0:
@@ -222,10 +228,18 @@ if __name__ == '__main__':
                         os.path.join(save_dir, args.model + '.pth')
                     )
 
-            epoch_pbar.set_postfix(
-                loss=f"{loss:.4f}",
-                best_psnr=f"{best_psnr:.2f}"
-            )
+                print(
+                    f"Epoch {epoch} DONE | "
+                    f"loss={loss:.4f} | "
+                    f"psnr={psnr:.2f} | "
+                    f"best_psnr={best_psnr:.2f}"
+                )
+            else:
+                print(
+                    f"Epoch {epoch} DONE | "
+                    f"loss={loss:.4f} | "
+                    f"best_psnr={best_psnr:.2f}"
+                )
 
     except KeyboardInterrupt:
         print("\n⛔ Training interrupted. Saving checkpoint...")
