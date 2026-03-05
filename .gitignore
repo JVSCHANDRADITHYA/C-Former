@@ -127,3 +127,5 @@ dmypy.json
 *.png
 *.gif
 *.pth
+
+/results_RL_batch/
